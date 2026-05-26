@@ -28,8 +28,7 @@ The sample walks through the end-to-end flow:
 - A **redirect URI** that Recruit Wizard support has white-listed on your
   client. For testing, the samples default to a
   `https://webhook.site/<uuid>` URL — see each sample's README for the
-  full webhook.site walkthrough. (`localhost` callbacks work too if you
-  already have one registered, but most setups won't.)
+  full webhook.site walkthrough.
 
 ## Quick start
 
