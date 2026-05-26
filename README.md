@@ -15,10 +15,11 @@ The sample walks through the end-to-end flow:
 
 ## Samples in this repo
 
-| Folder                | Stack                                        | Status   |
-| --------------------- | -------------------------------------------- | -------- |
-| [`nodejs/`](./nodejs) | Node.js + Express + EJS                      | Working  |
-| [`dotnet/`](./dotnet) | ASP.NET Core 9 + Razor Pages + minimal APIs  | Working  |
+| Folder                  | Stack                                        | Status   |
+| ----------------------- | -------------------------------------------- | -------- |
+| [`nodejs/`](./nodejs)   | Node.js + Express + EJS                      | Working  |
+| [`dotnet/`](./dotnet)   | ASP.NET Core 9 + Razor Pages + minimal APIs  | Working  |
+| [`postman/`](./postman) | Postman collection (importable requests)     | Working  |
 
 ## Prerequisites
 
