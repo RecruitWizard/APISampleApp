@@ -16,7 +16,7 @@ function requireEnv(name) {
 const host = requireEnv('HOST').replace(/\/+$/, '');
 const clientId = requireEnv('CLIENT_ID');
 const clientSecret = requireEnv('CLIENT_SECRET');
-const redirectUri = (process.env.REDIRECT_URI || 'http://localhost:3000/auth/callback').trim();
+const redirectUri = (process.env.REDIRECT_URI || 'https://webhook.site/your-unique-id-here').trim();
 const port = Number(process.env.PORT || 3000);
 
 module.exports = {

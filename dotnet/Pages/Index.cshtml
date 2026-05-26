@@ -1,0 +1,523 @@
+@page
+@model RecruitWizard.AuthSample.Pages.IndexModel
+@using System.Text.Json
+@using System.Text.RegularExpressions
+@{
+    var hostLabel = Regex.Replace(Model.Host, "^https?://", "").TrimEnd('/');
+    string envLabel = "custom";
+    if (Regex.IsMatch(hostLabel, "sandbox", RegexOptions.IgnoreCase)) envLabel = "sandbox";
+    else if (Regex.IsMatch(hostLabel, "^(localhost|127\\.0\\.0\\.1)(:|$)", RegexOptions.IgnoreCase)) envLabel = "local";
+    else if (Regex.IsMatch(hostLabel.Split(':')[0], "(^|\\.)recruitwizard\\.app$", RegexOptions.IgnoreCase)) envLabel = "production";
+
+    static string Trunc(string s, int head, int tail) =>
+        string.IsNullOrEmpty(s) || s.Length <= head + tail ? s : s.Substring(0, head) + "…" + s.Substring(s.Length - tail);
+}
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Recruit Wizard API – Auth Flow Sample (.NET)</title>
+    <link rel="icon" type="image/png" href="/assets/full-logo-dark.png" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Montserrat+Alternates:wght@@600;700;800&family=Noto+Sans:wght@@400;500;600;700&display=swap"
+    />
+    <style>
+      :root {
+        --rw-charcoal: #0a0519;
+        --rw-navy: #000872;
+        --rw-dark-purple: #3a029b;
+        --rw-purple: #5e21d0;
+        --rw-violet: #af2eed;
+        --rw-aqua: #6dd3ce;
+        --rw-white: #ffffff;
+
+        --bg: var(--rw-charcoal);
+        --panel: #15082e;
+        --panel-2: #0d0421;
+        --text: var(--rw-white);
+        --muted: rgba(255, 255, 255, 0.62);
+        --accent: var(--rw-violet);
+        --accent-2: var(--rw-aqua);
+        --good: var(--rw-aqua);
+        --bad: #ff6b8a;
+        --border: rgba(175, 46, 237, 0.22);
+        --border-soft: rgba(255, 255, 255, 0.08);
+      }
+      * { box-sizing: border-box; }
+      body {
+        margin: 0;
+        font-family: "Noto Sans", -apple-system, BlinkMacSystemFont, "Segoe UI",
+          Roboto, "Helvetica Neue", Arial, sans-serif;
+        color: var(--text);
+        min-height: 100vh;
+        background:
+          radial-gradient(1100px 600px at 80% -10%, rgba(94, 33, 208, 0.30), transparent 60%),
+          radial-gradient(900px 500px at -10% 10%, rgba(175, 46, 237, 0.22), transparent 60%),
+          radial-gradient(700px 500px at 50% 110%, rgba(109, 211, 206, 0.10), transparent 60%),
+          linear-gradient(180deg, #0a0519 0%, #0a0519 100%);
+        background-attachment: fixed;
+      }
+      .container {
+        max-width: 920px;
+        margin: 0 auto;
+        padding: 32px 24px 80px;
+      }
+      .brandbar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+        margin-bottom: 32px;
+      }
+      .brandbar img { height: 38px; width: auto; display: block; }
+      .brandbar .env {
+        font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+        font-size: 12px;
+        color: var(--muted);
+        background: rgba(255, 255, 255, 0.04);
+        border: 1px solid var(--border-soft);
+        padding: 5px 10px;
+        border-radius: 999px;
+      }
+      h1, h2, h3 {
+        font-family: "Montserrat Alternates", "Noto Sans", sans-serif;
+        font-weight: 700;
+        letter-spacing: -0.01em;
+      }
+      header h1 {
+        margin: 0 0 6px;
+        font-size: 30px;
+        background: linear-gradient(90deg, #ffffff 0%, #6dd3ce 50%, #af2eed 100%);
+        -webkit-background-clip: text;
+        background-clip: text;
+        color: transparent;
+      }
+      header p { margin: 0 0 28px; color: var(--muted); }
+      .stack-tag {
+        display: inline-block;
+        margin-left: 10px;
+        font-size: 12px;
+        font-weight: 700;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        background: linear-gradient(135deg, var(--rw-purple), var(--rw-violet));
+        color: var(--rw-white);
+        padding: 3px 10px;
+        border-radius: 999px;
+        vertical-align: middle;
+      }
+      .card {
+        background:
+          linear-gradient(180deg, rgba(94, 33, 208, 0.06) 0%, rgba(94, 33, 208, 0) 100%),
+          var(--panel);
+        border: 1px solid var(--border);
+        border-radius: 14px;
+        padding: 22px 24px;
+        margin-bottom: 18px;
+        box-shadow:
+          0 1px 0 rgba(255, 255, 255, 0.04) inset,
+          0 10px 30px -20px rgba(0, 0, 0, 0.6);
+      }
+      .card h2,
+      details.card > summary {
+        margin: 0 0 12px;
+        font-size: 13px;
+        text-transform: uppercase;
+        letter-spacing: 0.14em;
+        color: var(--rw-aqua);
+        font-weight: 600;
+        font-family: "Montserrat Alternates", "Noto Sans", sans-serif;
+      }
+      details.card > summary {
+        cursor: pointer;
+        list-style: none;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        user-select: none;
+        transition: color 0.15s ease;
+      }
+      details.card > summary::-webkit-details-marker { display: none; }
+      details.card > summary::marker { content: ""; }
+      details.card:not([open]) > summary { margin-bottom: 0; }
+      details.card > summary::after {
+        content: "";
+        flex: 0 0 9px;
+        width: 9px;
+        height: 9px;
+        border-right: 2px solid currentColor;
+        border-bottom: 2px solid currentColor;
+        transform: rotate(-45deg);
+        transition: transform 0.18s ease;
+        opacity: 0.7;
+        margin-right: 3px;
+      }
+      details.card[open] > summary::after { transform: rotate(45deg); opacity: 1; }
+      details.card > summary:hover { color: var(--rw-white); }
+      details.card > summary:focus-visible {
+        outline: 2px solid var(--rw-violet);
+        outline-offset: 4px;
+        border-radius: 4px;
+      }
+      .row { display: flex; gap: 12px; flex-wrap: wrap; align-items: center; }
+      .pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 4px 11px;
+        border-radius: 999px;
+        font-size: 12px;
+        font-weight: 600;
+        letter-spacing: 0.02em;
+      }
+      .pill.good { background: rgba(109, 211, 206, 0.15); color: var(--rw-aqua); border: 1px solid rgba(109, 211, 206, 0.35); }
+      .pill.bad  { background: rgba(255, 107, 138, 0.15); color: var(--bad); border: 1px solid rgba(255, 107, 138, 0.35); }
+      .pill.muted{ background: rgba(255, 255, 255, 0.06); color: var(--muted); border: 1px solid var(--border-soft); }
+      .btn {
+        display: inline-block;
+        padding: 10px 18px;
+        font-size: 14px;
+        font-weight: 700;
+        color: var(--rw-white);
+        background: linear-gradient(135deg, var(--rw-purple) 0%, var(--rw-violet) 100%);
+        border: 0;
+        border-radius: 10px;
+        cursor: pointer;
+        text-decoration: none;
+        font-family: inherit;
+        letter-spacing: 0.01em;
+        box-shadow: 0 6px 20px -8px rgba(175, 46, 237, 0.7);
+        transition: transform 0.05s ease, filter 0.15s ease, box-shadow 0.15s ease;
+      }
+      .btn:hover { filter: brightness(1.08); box-shadow: 0 8px 24px -6px rgba(175, 46, 237, 0.85); }
+      .btn:active { transform: translateY(1px); }
+      .btn.secondary {
+        background: transparent;
+        color: var(--rw-aqua);
+        border: 1px solid rgba(109, 211, 206, 0.55);
+        box-shadow: none;
+      }
+      .btn.secondary:hover { background: rgba(109, 211, 206, 0.08); box-shadow: none; }
+      .btn.ghost {
+        background: transparent;
+        color: var(--muted);
+        border: 1px solid var(--border-soft);
+        box-shadow: none;
+      }
+      .btn.danger {
+        background: transparent;
+        color: var(--bad);
+        border: 1px solid rgba(255, 107, 138, 0.55);
+        box-shadow: none;
+      }
+      .btn.danger:hover { background: rgba(255, 107, 138, 0.08); }
+      form { display: inline; margin: 0; }
+      dl.kv {
+        display: grid;
+        grid-template-columns: 180px 1fr;
+        gap: 6px 16px;
+        margin: 0;
+        font-size: 14px;
+      }
+      dl.kv dt { color: var(--muted); }
+      dl.kv dd {
+        margin: 0;
+        font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+        font-size: 13px;
+        word-break: break-all;
+      }
+      pre {
+        background: var(--panel-2);
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        padding: 14px 16px;
+        overflow-x: auto;
+        font-size: 12.5px;
+        line-height: 1.55;
+        margin: 0;
+        color: #e9defb;
+      }
+      .step { display: flex; gap: 14px; align-items: flex-start; margin-bottom: 14px; }
+      .step:last-child { margin-bottom: 0; }
+      .step .num {
+        flex: 0 0 30px;
+        height: 30px;
+        width: 30px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, var(--rw-purple), var(--rw-violet));
+        color: var(--rw-white);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 700;
+        font-size: 13px;
+        margin-top: 2px;
+        font-family: "Montserrat Alternates", sans-serif;
+      }
+      .step .body { flex: 1; }
+      .step .body p { margin: 0 0 6px; }
+      .step .body code {
+        font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+        font-size: 12.5px;
+        color: var(--rw-aqua);
+      }
+      code { color: var(--rw-aqua); }
+      .banner { padding: 12px 16px; border-radius: 10px; margin-bottom: 18px; font-size: 14px; }
+      .banner.ok  { background: rgba(109, 211, 206, 0.10); border: 1px solid rgba(109, 211, 206, 0.40); color: var(--rw-aqua); }
+      .banner.err { background: rgba(255, 107, 138, 0.10); border: 1px solid rgba(255, 107, 138, 0.40); color: var(--bad); }
+      a { color: var(--rw-violet); }
+      a:hover { color: var(--rw-aqua); }
+      .muted { color: var(--muted); }
+      .small { font-size: 12px; }
+      footer.foot {
+        margin-top: 32px;
+        color: var(--muted);
+        font-size: 12px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+      footer.foot .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--rw-aqua); }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div class="brandbar">
+        <img src="/assets/full-logo-dark.png" alt="Recruit Wizard" />
+        <span class="env">@envLabel &middot; @hostLabel</span>
+      </div>
+      <header>
+        <h1>API Auth Flow Sample <span class="stack-tag">.NET</span></h1>
+        <p>OAuth 2.0 authorization code flow against <code>@Model.Host</code></p>
+      </header>
+
+      @if (!string.IsNullOrEmpty(Model.Message))
+      {
+          <div class="banner ok">@Model.Message</div>
+      }
+      @if (!string.IsNullOrEmpty(Model.ErrorMessage))
+      {
+          <div class="banner err"><strong>Error:</strong> @Model.ErrorMessage</div>
+      }
+
+      <details class="card" open>
+        <summary>Status</summary>
+        <div class="row" style="margin-bottom: 14px;">
+          @if (Model.Tokens is not null)
+          {
+              <span class="pill good">Authenticated</span>
+          }
+          else
+          {
+              <span class="pill bad">Not authenticated</span>
+          }
+          <span class="pill muted">client_id: @Model.ClientId</span>
+          <span class="pill muted">redirect_uri: @Model.RedirectUri</span>
+        </div>
+
+        @if (Model.Tokens is null)
+        {
+          <div class="step">
+            <div class="num">1</div>
+            <div class="body">
+              <p><strong>Open Recruit Wizard in a new tab and sign in.</strong></p>
+              <p class="small muted" style="margin-bottom: 10px;">
+                A new tab will land on <code>@Model.RedirectUri</code> with the
+                authorization code displayed. Copy it, then come back here.
+              </p>
+              <a class="btn" href="/auth/login" target="_blank" rel="noopener">Connect to Recruit Wizard &#8599;</a>
+            </div>
+          </div>
+          <div class="step" style="margin-top: 18px;">
+            <div class="num">2</div>
+            <div class="body">
+              <p><strong>Paste the authorization code here.</strong></p>
+              <p class="small muted" style="margin-bottom: 10px;">
+                The app will POST it to <code>@Model.Host/api/connect/token</code>
+                with <code>grant_type=authorization_code</code> and your client
+                credentials, then show you the response below.
+              </p>
+              <form id="exchange-form" method="post" action="/auth/exchange" class="row" style="gap: 8px;">
+                <input
+                  id="code-input"
+                  type="text"
+                  name="code"
+                  value="@Model.PrefillCode"
+                  placeholder="Paste authorization code"
+                  autocomplete="off"
+                  autocapitalize="off"
+                  spellcheck="false"
+                  required
+                  style="flex: 1; min-width: 260px; padding: 10px 12px; font-family: ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, monospace; font-size: 13px; background: var(--panel-2); color: var(--text); border: 1px solid var(--border); border-radius: 8px;"
+                />
+                <button class="btn" type="submit">Exchange code for token</button>
+              </form>
+              <script>
+                (function () {
+                  var input = document.getElementById('code-input');
+                  var form = document.getElementById('exchange-form');
+                  if (!input || !form) return;
+                  var trim = function () {
+                    var trimmed = input.value.replace(/^\s+|\s+$/g, '');
+                    if (trimmed !== input.value) input.value = trimmed;
+                  };
+                  input.addEventListener('paste', function () { setTimeout(trim, 0); });
+                  input.addEventListener('input', trim);
+                  input.addEventListener('blur', trim);
+                  form.addEventListener('submit', trim);
+                  trim();
+                })();
+              </script>
+            </div>
+          </div>
+        }
+        else
+        {
+          <div class="row">
+            <form method="post" action="/api/server-status">
+              <button class="btn" type="submit">Call /api/ServerStatus</button>
+            </form>
+            <form method="post" action="/api/me">
+              <button class="btn secondary" type="submit">Call /api/Users/{me}</button>
+            </form>
+            <form method="post" action="/auth/refresh">
+              <button class="btn secondary" type="submit">Refresh access token</button>
+            </form>
+            <form method="post" action="/auth/logout">
+              <button class="btn danger" type="submit">Clear tokens</button>
+            </form>
+          </div>
+        }
+      </details>
+
+      <details class="card" open>
+        <summary>The flow</summary>
+        <div class="step">
+          <div class="num">1</div>
+          <div class="body">
+            <p>Redirect the browser to the authorization URL.</p>
+            <p class="small muted">
+              <code>GET @Model.Host/api/connect/authorize?response_type=code&amp;client_id=…&amp;redirect_uri=…&amp;state=…</code>
+            </p>
+          </div>
+        </div>
+        <div class="step">
+          <div class="num">2</div>
+          <div class="body">
+            <p>User signs in &amp; approves; Recruit Wizard redirects back with <code>code</code> + <code>state</code>.</p>
+            <p class="small muted">Handled by <code>GET /auth/callback</code> in this app.</p>
+          </div>
+        </div>
+        <div class="step">
+          <div class="num">3</div>
+          <div class="body">
+            <p>Exchange the code for tokens.</p>
+            <p class="small muted">
+              <code>POST @Model.Host/api/connect/token</code> with
+              <code>grant_type=authorization_code</code>,
+              <code>client_id</code>, <code>client_secret</code>, <code>code</code>
+              (form&#8209;encoded).
+            </p>
+          </div>
+        </div>
+        <div class="step">
+          <div class="num">4</div>
+          <div class="body">
+            <p>When the access token expires, swap the refresh token for a new one.</p>
+            <p class="small muted">
+              Same endpoint, <code>grant_type=refresh_token</code> +
+              <code>refresh_token=…</code>.
+            </p>
+          </div>
+        </div>
+        <div class="step">
+          <div class="num">5</div>
+          <div class="body">
+            <p>Call the API with <code>Authorization: Bearer &lt;access_token&gt;</code>.</p>
+          </div>
+        </div>
+      </details>
+
+      @if (Model.LastTokenResponse is not null)
+      {
+          var tokenJson = JsonSerializer.Serialize(
+              Model.LastTokenResponse.Payload,
+              new JsonSerializerOptions { WriteIndented = true });
+          <details class="card" open>
+            <summary>Token endpoint response</summary>
+            <p class="small muted" style="margin: -6px 0 10px;">
+              Raw JSON returned by <code>POST @Model.Host/api/connect/token</code>
+              at @Model.LastTokenResponse.At.ToString("u").
+            </p>
+            <pre>@tokenJson</pre>
+          </details>
+      }
+
+      @if (Model.Tokens is not null)
+      {
+          <details class="card" open>
+            <summary>Current tokens</summary>
+            <dl class="kv">
+              <dt>access_token</dt>
+              <dd>@Trunc(Model.Tokens.AccessToken, 36, 12)</dd>
+              <dt>access_token_expiry</dt>
+              <dd>@(Model.Tokens.AccessTokenExpiry ?? "(unknown)")</dd>
+              <dt>refresh_token</dt>
+              <dd>@(string.IsNullOrEmpty(Model.Tokens.RefreshToken) ? "(none)" : Trunc(Model.Tokens.RefreshToken, 8, 6))</dd>
+              <dt>refresh_token_expiry</dt>
+              <dd>@(Model.Tokens.RefreshTokenExpiry ?? "(unknown)")</dd>
+              <dt>received_at</dt>
+              <dd>@Model.Tokens.ReceivedAt.ToString("u")</dd>
+            </dl>
+          </details>
+
+          @if (Model.JwtClaims is not null)
+          {
+              var claimsJson = JsonSerializer.Serialize(
+                  Model.JwtClaims,
+                  new JsonSerializerOptions { WriteIndented = true });
+              <details class="card" open>
+                <summary>Access token claims (decoded, unverified)</summary>
+                <pre>@claimsJson</pre>
+              </details>
+          }
+      }
+
+      @if (Model.LastApiResult is not null)
+      {
+          <details class="card" open>
+            <summary>Last API call</summary>
+            <dl class="kv">
+              <dt>request</dt>
+              <dd>@Model.LastApiResult.Method @Model.LastApiResult.Url</dd>
+              <dt>status</dt>
+              <dd>
+                @if (Model.LastApiResult.Status >= 200 && Model.LastApiResult.Status < 300)
+                {
+                    <span class="pill good">@Model.LastApiResult.Status @Model.LastApiResult.StatusText</span>
+                }
+                else
+                {
+                    <span class="pill bad">@Model.LastApiResult.Status @Model.LastApiResult.StatusText</span>
+                }
+              </dd>
+              <dt>at</dt>
+              <dd>@Model.LastApiResult.At.ToString("u")</dd>
+            </dl>
+            <p class="small muted" style="margin-top: 12px;">response body:</p>
+            <pre>@Model.LastApiResult.Body</pre>
+          </details>
+      }
+
+      <footer class="foot">
+        <span class="dot"></span>
+        Server logs every step in your terminal. Tokens are kept in memory and cleared on restart.
+      </footer>
+    </div>
+  </body>
+</html>

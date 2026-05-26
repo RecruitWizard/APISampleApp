@@ -20,9 +20,17 @@ used by the [Recruit Wizard API](https://sandbox.recruitwizard.site/api-docs/#de
 ## Prerequisites
 
 - Node.js 18+ (uses built-in `fetch`)
-- A Recruit Wizard API client (`client_id` + `client_secret`) with a registered
-  redirect URI matching `REDIRECT_URI` below (default
-  `http://localhost:3000/auth/callback`)
+- A Recruit Wizard API client (`client_id` + `client_secret`) with a redirect
+  URI that Recruit Wizard support has white-listed on your client. The sample
+  defaults to a `https://webhook.site/<uuid>` placeholder so you don't need
+  to expose localhost via ngrok or a similar tunnel — see
+  ["Testing with webhook.site"](#testing-with-webhooksite-no-localhost-callback-needed)
+  below.
+
+> **Heads-up:** redirect URIs are white-listed per client by Recruit Wizard.
+> If the URL you want to use isn't already registered, send it to Recruit
+> Wizard support and ask them to add it to your client — otherwise the
+> authorize step will fail with a `redirect_uri` mismatch.
 
 ## Setup
 
@@ -36,6 +44,41 @@ npm start
 ```
 
 Then open <http://localhost:3000>.
+
+## Testing with webhook.site (no localhost callback needed)
+
+Recruit Wizard typically white-lists HTTPS redirect URIs only, so a plain
+`http://localhost:…/auth/callback` won't work without exposing your machine
+through ngrok or a similar tunnel. The simplest workaround — and the default
+this sample ships with — is to use [webhook.site](https://webhook.site/) as a
+disposable callback target.
+
+1. Open <https://webhook.site> and copy the unique URL it gives you,
+   e.g. `https://webhook.site/e9afcb42-4a99-45f3-a92d-dec5d1dd19c5`.
+2. **Send that URL to Recruit Wizard support** and ask them to add it as an
+   allowed redirect URI on your client. Recruit Wizard validates the
+   `redirect_uri` you send in the authorize request against this white-list,
+   so the authorize step will fail until support has registered it.
+3. In `.env`, set `REDIRECT_URI` to the same URL so the sample builds an
+   authorize link that matches what you registered:
+
+   ```dotenv
+   REDIRECT_URI=https://webhook.site/e9afcb42-4a99-45f3-a92d-dec5d1dd19c5
+   ```
+
+4. Once support has confirmed the URL is white-listed, `npm start`, open
+   <http://localhost:3000>, click **Connect to Recruit Wizard**, and sign
+   in. Recruit Wizard will redirect to webhook.site instead of back to the
+   sample app.
+5. In the webhook.site tab, look at the latest request's query string —
+   you'll see `?code=…&state=…`. Copy the `code` value.
+6. Switch back to the sample app's main tab, paste the code into the
+   **Exchange code for token** input, and submit.
+
+> The local `/auth/callback` page is skipped in this mode (the redirect lands
+> on webhook.site, not on your machine), so the built-in `state` check is
+> bypassed too. That's fine for ad-hoc testing — just don't ship a flow like
+> this to production.
 
 ## Environment variables
 

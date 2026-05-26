@@ -15,18 +15,24 @@ The sample walks through the end-to-end flow:
 
 ## Samples in this repo
 
-| Folder                | Stack                          | Status   |
-| --------------------- | ------------------------------ | -------- |
-| [`nodejs/`](./nodejs) | Node.js + Express + EJS        | Working  |
+| Folder                | Stack                                        | Status   |
+| --------------------- | -------------------------------------------- | -------- |
+| [`nodejs/`](./nodejs) | Node.js + Express + EJS                      | Working  |
+| [`dotnet/`](./dotnet) | ASP.NET Core 9 + Razor Pages + minimal APIs  | Working  |
 
 ## Prerequisites
 
 - A Recruit Wizard API client (`client_id` + `client_secret`) issued for the
   tenant you want to connect to.
-- A registered **redirect URI** on that client that matches what the sample
-  uses locally (default `http://localhost:3000/auth/callback`).
+- A **redirect URI** that Recruit Wizard support has white-listed on your
+  client. For testing, the samples default to a
+  `https://webhook.site/<uuid>` URL — see each sample's README for the
+  full webhook.site walkthrough. (`localhost` callbacks work too if you
+  already have one registered, but most setups won't.)
 
 ## Quick start
+
+### Node.js
 
 ```bash
 cd nodejs
@@ -38,3 +44,16 @@ npm start
 ```
 
 See [`nodejs/README.md`](./nodejs/README.md) for the full walkthrough.
+
+### .NET
+
+```bash
+cd dotnet
+dotnet restore
+# Configure RecruitWizard:Host, ClientId, ClientSecret, RedirectUri
+# (appsettings.json, user secrets, or environment variables)
+dotnet run
+# open http://localhost:3000
+```
+
+See [`dotnet/README.md`](./dotnet/README.md) for the full walkthrough.

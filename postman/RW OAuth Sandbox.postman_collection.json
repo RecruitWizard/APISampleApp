@@ -1,0 +1,128 @@
+{
+  "info": {
+    "_postman_id": "5b80fd3f-fe86-4f2b-baec-713ac1f8e930",
+    "name": "RecruitWizard OAuth Sandbox",
+    "description": "This collection supports OAuth 2.0 authentication flows against the Recruit Wizard **Sandbox** environment (`sandbox.recruitwizard.site`).\n\nIt implements the standard **Authorization Code** grant type and contains two requests that must be executed in sequence:\n\n1. **Request Code** – Initiates the OAuth 2.0 authorization flow by redirecting the user to the Recruit Wizard authorization endpoint. The authorization server returns a short-lived authorization code to the configured redirect URI.\n2. **Request Token** – Exchanges the authorization code obtained in the previous step for an access token by calling the token endpoint. The resulting access token can then be used to authenticate API calls to the Recruit Wizard Sandbox.\n\nUse this collection to test and validate OAuth 2.0 integration in a safe, non-production sandbox environment before promoting to Production.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "33412785"
+  },
+  "item": [
+    {
+      "name": "Request Token",
+      "request": {
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "urlencoded",
+          "urlencoded": [
+            {
+              "key": "client_id",
+              "value": "{{client_id}}",
+              "type": "text"
+            },
+            {
+              "key": "client_secret",
+              "value": "{{client_secret}}",
+              "type": "text"
+            },
+            {
+              "key": "grant_type",
+              "value": "authorization_code",
+              "type": "text"
+            },
+            {
+              "key": "code",
+              "value": "{{code}}",
+              "type": "text"
+            }
+          ]
+        },
+        "url": {
+          "raw": "https://sandbox.recruitwizard.site/api/connect/token",
+          "protocol": "https",
+          "host": [
+            "sandbox",
+            "recruitwizard",
+            "site"
+          ],
+          "path": [
+            "api",
+            "connect",
+            "token"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Request Code",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "https://sandbox.recruitwizard.site/api/connect/authorize?response_type=code&client_id={{client_id}}&redirect_uri={{re_directURI}}",
+          "protocol": "https",
+          "host": [
+            "sandbox",
+            "recruitwizard",
+            "site"
+          ],
+          "path": [
+            "api",
+            "connect",
+            "authorize"
+          ],
+          "query": [
+            {
+              "key": "response_type",
+              "value": "code"
+            },
+            {
+              "key": "client_id",
+              "value": "{{client_id}}"
+            },
+            {
+              "key": "redirect_uri",
+              "value": "{{re_directURI}}"
+            }
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Gets information about the current User",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Accept",
+            "value": "application/json",
+            "disabled": false
+          },
+          {
+            "key": "Authorization",
+            "value": "Bearer {{access_token}}",
+            "disabled": false
+          }
+        ],
+        "url": {
+          "raw": "https://sandbox.recruitwizard.site/api/users/me",
+          "protocol": "https",
+          "host": [
+            "sandbox",
+            "recruitwizard",
+            "site"
+          ],
+          "path": [
+            "api",
+            "users",
+            "me"
+          ]
+        },
+        "description": "Returns profile information for the currently authenticated user. This request demonstrates how to consume the Recruit Wizard API using the access token obtained from the OAuth 2.0 flow. Ensure the `{{access_token}}` variable is set in your environment before sending.\n\n**Reference:** This endpoint mirrors `GET /api/users/me` from the Recruit Wizard API collection."
+      },
+      "response": []
+    }
+  ]
+}
