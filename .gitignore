@@ -1,0 +1,15 @@
+# --- General ---
+.DS_Store
+*.log
+.vs/
+.idea/
+.vscode/
+
+# --- Node ---
+node_modules/
+.env
+.env.local
+.env.*.local
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*

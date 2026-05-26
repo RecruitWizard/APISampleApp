@@ -1,0 +1,263 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Authorization callback &mdash; Recruit Wizard sample</title>
+    <link rel="icon" type="image/png" href="/assets/full-logo-dark.png" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Montserrat+Alternates:wght@600;700;800&family=Noto+Sans:wght@400;500;600;700&display=swap"
+    />
+    <style>
+      :root {
+        --rw-charcoal: #0a0519;
+        --rw-navy: #000872;
+        --rw-dark-purple: #3a029b;
+        --rw-purple: #5e21d0;
+        --rw-violet: #af2eed;
+        --rw-aqua: #6dd3ce;
+        --rw-white: #ffffff;
+
+        --bg: var(--rw-charcoal);
+        --panel: #15082e;
+        --panel-2: #0d0421;
+        --text: var(--rw-white);
+        --muted: rgba(255, 255, 255, 0.62);
+        --accent: var(--rw-violet);
+        --good: var(--rw-aqua);
+        --bad: #ff6b8a;
+        --border: rgba(175, 46, 237, 0.22);
+        --border-soft: rgba(255, 255, 255, 0.08);
+      }
+      * { box-sizing: border-box; }
+      body {
+        margin: 0;
+        font-family: "Noto Sans", -apple-system, BlinkMacSystemFont, "Segoe UI",
+          Roboto, "Helvetica Neue", Arial, sans-serif;
+        color: var(--text);
+        min-height: 100vh;
+        background:
+          radial-gradient(900px 500px at 80% -10%, rgba(94, 33, 208, 0.32), transparent 60%),
+          radial-gradient(700px 400px at -10% 10%, rgba(175, 46, 237, 0.22), transparent 60%),
+          radial-gradient(600px 400px at 50% 110%, rgba(109, 211, 206, 0.10), transparent 60%),
+          linear-gradient(180deg, #0a0519 0%, #0a0519 100%);
+        background-attachment: fixed;
+      }
+      .container {
+        max-width: 720px;
+        margin: 0 auto;
+        padding: 40px 24px 80px;
+      }
+      .brandbar {
+        margin-bottom: 32px;
+      }
+      .brandbar img {
+        height: 34px;
+        width: auto;
+        display: block;
+      }
+      h1 {
+        margin: 0 0 8px;
+        font-size: 26px;
+        letter-spacing: -0.01em;
+        font-family: "Montserrat Alternates", "Noto Sans", sans-serif;
+        font-weight: 700;
+      }
+      .sub {
+        color: var(--muted);
+        margin: 0 0 28px;
+        line-height: 1.55;
+      }
+      .card {
+        background:
+          linear-gradient(180deg, rgba(94, 33, 208, 0.06) 0%, rgba(94, 33, 208, 0) 100%),
+          var(--panel);
+        border: 1px solid var(--border);
+        border-radius: 14px;
+        padding: 22px 24px;
+        margin-bottom: 18px;
+        box-shadow:
+          0 1px 0 rgba(255, 255, 255, 0.04) inset,
+          0 10px 30px -20px rgba(0, 0, 0, 0.6);
+      }
+      .card h2,
+      details.card > summary {
+        margin: 0 0 14px;
+        font-size: 13px;
+        text-transform: uppercase;
+        letter-spacing: 0.14em;
+        color: var(--rw-aqua);
+        font-family: "Montserrat Alternates", "Noto Sans", sans-serif;
+        font-weight: 600;
+      }
+      details.card > summary {
+        cursor: pointer;
+        list-style: none;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        user-select: none;
+        transition: color 0.15s ease;
+      }
+      details.card > summary::-webkit-details-marker { display: none; }
+      details.card > summary::marker { content: ""; }
+      details.card:not([open]) > summary { margin-bottom: 0; }
+      details.card > summary::after {
+        content: "";
+        flex: 0 0 9px;
+        width: 9px;
+        height: 9px;
+        border-right: 2px solid currentColor;
+        border-bottom: 2px solid currentColor;
+        transform: rotate(-45deg);
+        transition: transform 0.18s ease;
+        opacity: 0.7;
+        margin-right: 3px;
+      }
+      details.card[open] > summary::after {
+        transform: rotate(45deg);
+        opacity: 1;
+      }
+      details.card > summary:hover { color: var(--rw-white); }
+      details.card > summary:focus-visible {
+        outline: 2px solid var(--rw-violet);
+        outline-offset: 4px;
+        border-radius: 4px;
+      }
+      .code-row {
+        display: flex;
+        gap: 10px;
+        align-items: stretch;
+      }
+      .code-box {
+        flex: 1;
+        background: var(--panel-2);
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        padding: 12px 14px;
+        font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+        font-size: 13px;
+        word-break: break-all;
+        user-select: all;
+        color: #e9defb;
+      }
+      .btn {
+        padding: 10px 18px;
+        font-size: 14px;
+        font-weight: 700;
+        color: var(--rw-white);
+        background: linear-gradient(135deg, var(--rw-purple) 0%, var(--rw-violet) 100%);
+        border: 0;
+        border-radius: 10px;
+        cursor: pointer;
+        font-family: inherit;
+        box-shadow: 0 6px 20px -8px rgba(175, 46, 237, 0.7);
+      }
+      .btn:hover { filter: brightness(1.08); }
+      .pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 4px 11px;
+        border-radius: 999px;
+        font-size: 12px;
+        font-weight: 600;
+        letter-spacing: 0.02em;
+      }
+      .pill.good { background: rgba(109, 211, 206, 0.15); color: var(--rw-aqua); border: 1px solid rgba(109, 211, 206, 0.35); }
+      .pill.bad  { background: rgba(255, 107, 138, 0.15); color: var(--bad); border: 1px solid rgba(255, 107, 138, 0.35); }
+      .meta { color: var(--muted); font-size: 13px; }
+      .meta code { color: var(--rw-aqua); font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace; }
+      ol { padding-left: 20px; }
+      ol li { margin: 6px 0; }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div class="brandbar">
+        <img src="/assets/full-logo-dark.png" alt="Recruit Wizard" />
+      </div>
+      <% if (ok) { %>
+        <span class="pill good">Authorization successful</span>
+        <h1 style="margin-top: 10px;">Copy the code below</h1>
+        <p class="sub">
+          Switch back to the sample app tab, paste this code into the
+          <em>Exchange code for token</em> field, and click the button.
+          The code is single-use and expires in about 5 minutes.
+        </p>
+
+        <details class="card" open>
+          <summary>Authorization code</summary>
+          <div class="code-row">
+            <div class="code-box" id="code"><%= code %></div>
+            <button class="btn" id="copy-btn" type="button" onclick="copyCode()">Copy</button>
+          </div>
+          <% if (state) { %>
+            <p class="meta" style="margin-top: 12px;">
+              state: <code><%= state %></code>
+            </p>
+          <% } %>
+        </details>
+
+        <details class="card" open>
+          <summary>What happens next</summary>
+          <ol class="meta">
+            <li>Copy the code above.</li>
+            <li>Go back to the sample app tab (the one that opened this window).</li>
+            <li>Paste it into the input and click <strong>Exchange code for token</strong>.</li>
+            <li>The app will POST it to <code>/api/connect/token</code> and show you the JWT response.</li>
+          </ol>
+          <p class="meta" style="margin-top: 14px;">You can close this tab once you've copied the code.</p>
+        </details>
+      <% } else { %>
+        <span class="pill bad">Authorization failed</span>
+        <h1 style="margin-top: 10px;">Something went wrong</h1>
+        <p class="sub"><%= message %></p>
+        <% if (code) { %>
+          <details class="card" open>
+            <summary>Code received anyway</summary>
+            <div class="code-row">
+              <div class="code-box" id="code"><%= code %></div>
+              <button class="btn" id="copy-btn" type="button" onclick="copyCode()">Copy</button>
+            </div>
+            <p class="meta" style="margin-top: 12px;">
+              You can still try to exchange this manually from the main tab, but it may be rejected.
+            </p>
+          </details>
+        <% } %>
+      <% } %>
+    </div>
+
+    <script>
+      function copyCode() {
+        var el = document.getElementById('code');
+        if (!el) return;
+        var text = el.innerText.trim();
+        var btn = document.getElementById('copy-btn');
+        var done = function () {
+          if (!btn) return;
+          var original = btn.textContent;
+          btn.textContent = 'Copied';
+          setTimeout(function () { btn.textContent = original; }, 1500);
+        };
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          navigator.clipboard.writeText(text).then(done).catch(fallback);
+        } else {
+          fallback();
+        }
+        function fallback() {
+          var range = document.createRange();
+          range.selectNodeContents(el);
+          var sel = window.getSelection();
+          sel.removeAllRanges();
+          sel.addRange(range);
+          try { document.execCommand('copy'); done(); } catch (e) {}
+        }
+      }
+    </script>
+  </body>
+</html>

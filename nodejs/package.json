@@ -1,0 +1,19 @@
+{
+  "name": "recruitwizard-auth-sample",
+  "version": "1.0.0",
+  "description": "Node.js sample app demonstrating the Recruit Wizard API OAuth 2.0 authorization code flow.",
+  "main": "src/index.js",
+  "type": "commonjs",
+  "engines": {
+    "node": ">=18"
+  },
+  "scripts": {
+    "start": "node src/index.js",
+    "dev": "node --watch src/index.js"
+  },
+  "dependencies": {
+    "dotenv": "^16.4.5",
+    "ejs": "^3.1.10",
+    "express": "^4.19.2"
+  }
+}
